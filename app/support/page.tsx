@@ -1,1 +1,1 @@
-export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Support</h2><p className="lead">Product-specific support resources will be added as apps enter beta. Contact brent@altarislabs.dev.</p></div></section>}
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Support</h2><p className="lead">Product-specific support resources will be added as apps enter beta. Contact brentunderwood@altarislabs.dev.</p></div></section>}

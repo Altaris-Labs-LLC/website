@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { site } from "@/lib/site";
 
 export default function Home() {
   return (
@@ -92,7 +91,7 @@ export default function Home() {
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/services">How We Build</Link>
-              <a className="button secondary" href={`mailto:${site.email}`}>Contact Us</a>
+              <Link className="button secondary" href="/contact">Contact Us</Link>
             </div>
           </div>
         </div>
