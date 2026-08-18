@@ -11,8 +11,8 @@ export default function Home() {
             <p className="eyebrow">Independent software company</p>
             <h1>Build.<br/>Master.<br/>Ascend.</h1>
             <p className="hero-copy">
-              Altaris Labs creates ambitious software built around progression:
-              products that give people somewhere meaningful to go.
+              Altaris Labs creates ambitious software built to achieve—products that
+              bring your goals within reach.
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/games">Explore Ascent Games</Link>
@@ -38,34 +38,41 @@ export default function Home() {
 
       <section className="section dark-panel">
         <div className="container">
-          <div className="section-topline">
-            <div>
-              <p className="eyebrow">Product ecosystem</p>
-              <h2>Ascent Games</h2>
-            </div>
-            <Link className="text-link" href="/games">Explore the ecosystem →</Link>
-          </div>
+          <p className="eyebrow">Ascent Games</p>
+          <h2 className="ascent-heading">Rise Above the Rest.</h2>
+          <p className="ascent-intro">
+            Play timeless classics. Discover something new. Master the games you love.
+            Ascent Games brings deep, competitive games together in one place—built for
+            players who want more than just a match.
+          </p>
 
-          <div className="feature-grid">
-            <article className="feature-card feature-card-large">
-              <span className="card-index">01</span>
-              <h3>One account.<br/>Progress everywhere.</h3>
+          <div className="ascent-feature-grid">
+            <article className="ascent-feature">
+              <p className="ascent-feature-label">Discover</p>
+              <h3>Find your next game.</h3>
               <p>
-                Play across the Ascent family while your account level, Laurels,
-                achievements, and leaderboard standing follow you from game to game.
+                Explore a growing library ranging from familiar classics to games you may
+                have never played before. Ascent is built to make discovery part of the
+                experience.
               </p>
-              <Link className="text-link" href="/account">Ascent Account →</Link>
+              <Link className="text-link" href="/games">Browse Games →</Link>
             </article>
-            <article className="feature-card">
-              <span className="card-index">02</span>
-              <h3>Master each game.</h3>
-              <p>Training, competition, progression, and discovery built into each experience.</p>
-              <Link className="text-link" href="/games">View Games →</Link>
+            <article className="ascent-feature">
+              <p className="ascent-feature-label">Master</p>
+              <h3>Go beyond the rules.</h3>
+              <p>
+                Learn, practice, analyze, and develop your game with tools designed to help
+                you understand more, improve faster, and keep climbing.
+              </p>
+              <Link className="text-link" href="/games">Learn More →</Link>
             </article>
-            <article className="feature-card">
-              <span className="card-index">03</span>
-              <h3>Rise together.</h3>
-              <p>Cross-game rankings and achievements turn individual play into a larger journey.</p>
+            <article className="ascent-feature">
+              <p className="ascent-feature-label">Compete</p>
+              <h3>Put yourself to the test.</h3>
+              <p>
+                Face other players, machines, challenges, quests, rankings, and whatever
+                comes next. Every game is another opportunity to rise.
+              </p>
               <Link className="text-link" href="/leaderboards">Leaderboards →</Link>
             </article>
           </div>
