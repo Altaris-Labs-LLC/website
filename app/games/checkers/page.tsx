@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Checkers</h2><p className="lead">A modern checkers experience centered on learning, competition, and mastery. Planned.</p></div></section>}

@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Ascent Account</h2><p className="lead">Account levels, Laurels, achievements, rankings, purchases, and cross-game progress will live here.</p></div></section>}

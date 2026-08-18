@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>About</h2><p className="lead">Altaris Labs LLC is an independent software company building applications, games, and digital products around progression, challenge, and mastery.</p></div></section>}

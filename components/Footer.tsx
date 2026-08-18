@@ -1,0 +1,1 @@
+import Link from "next/link"; export default function Footer(){return <footer><div className="wrap nav"><span>© 2026 Altaris Labs LLC</span><nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/support">Support</Link></nav></div></footer>}

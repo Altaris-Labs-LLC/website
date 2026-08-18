@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Leaderboards</h2><p className="lead">Cross-game and game-specific rankings will appear here once Ascent Accounts launch.</p></div></section>}

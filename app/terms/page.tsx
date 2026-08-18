@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Terms</h2><p className="lead">Website and product-specific terms will be added before public commercial release.</p></div></section>}

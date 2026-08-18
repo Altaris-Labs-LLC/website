@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Ascent Games</h2><p className="lead">One account. Many games. Keep ascending.</p></div></section>}

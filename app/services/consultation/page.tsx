@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>$100 Product Consultation</h2><p className="lead">A focused session to understand the idea, users, requirements, feasibility, and development path.</p></div></section>}

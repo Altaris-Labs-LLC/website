@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Build with Altaris</h2><p className="lead">Custom application development begins with a $100 consultation followed by milestone-based scope and pricing.</p></div></section>}

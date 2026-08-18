@@ -1,0 +1,1 @@
+export default function Page(){return <section className="page"><div className="wrap"><p className="eyebrow">Altaris Labs</p><h2>Privacy Policy</h2><p className="lead">This website currently does not provide public user accounts or submission forms. Product-specific privacy policies will be added before release.</p></div></section>}
