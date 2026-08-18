@@ -4,10 +4,9 @@ import { site } from "@/lib/site";
 export default function Home() {
   return (
     <>
-      <section className="hero">
-        <div className="hero-orbit orbit-one" />
-        <div className="hero-orbit orbit-two" />
-        <div className="container hero-grid">
+      <section className="hero hero-image">
+        <div className="hero-image-overlay" />
+        <div className="container hero-content">
           <div className="hero-copy-block">
             <p className="eyebrow">Independent software company</p>
             <h1>Build.<br/>Master.<br/>Ascend.</h1>
@@ -19,13 +18,6 @@ export default function Home() {
               <Link className="button primary" href="/games">Explore Ascent Games</Link>
               <Link className="button secondary" href="/services">Build With Altaris</Link>
             </div>
-          </div>
-          <div className="summit-mark" aria-hidden="true">
-            <svg viewBox="0 0 500 500">
-              <path d="M250 42 451 436H49L250 42Z" className="summit-outline"/>
-              <path d="M250 135 365 361H135L250 135Z" className="summit-inner"/>
-              <path d="M250 42v319" className="summit-line"/>
-            </svg>
           </div>
         </div>
       </section>
@@ -96,6 +88,13 @@ export default function Home() {
               <a className="button secondary" href={`mailto:${site.email}`}>Contact Us</a>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="closing-summit">
+        <div className="container closing-inner">
+          <p className="eyebrow">Altaris Labs</p>
+          <h2>There is always<br/>a next summit.</h2>
         </div>
       </section>
     </>
