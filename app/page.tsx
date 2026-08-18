@@ -11,8 +11,8 @@ export default function Home() {
             <p className="eyebrow">Independent software company</p>
             <h1>Build.<br/>Master.<br/>Ascend.</h1>
             <p className="hero-copy">
-              Altaris Labs creates ambitious software built around progression:
-              products that give people somewhere meaningful to go.
+              Altaris Labs creates ambitious software built to achieve—products that
+              bring your goals within reach.
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/games">Explore Ascent Games</Link>
