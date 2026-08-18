@@ -1,1 +1,103 @@
-import Link from "next/link"; export default function Home(){return <><section className="hero"><div className="wrap"><p className="eyebrow">Independent software company</p><h1>Build. Master. Ascend.</h1><p className="lead">Altaris Labs builds ambitious software around progression, mastery, and experiences worth returning to.</p><div className="actions"><Link className="button" href="/games">Explore Ascent Games</Link><Link className="button ghost" href="/services">Build With Altaris</Link></div></div></section><section className="section"><div className="wrap"><p className="eyebrow">Our games</p><h2>Ascent Games</h2><p className="lead">A connected family of strategy and training experiences with progression that reaches beyond any single game.</p></div></section><section className="section alt"><div className="wrap"><p className="eyebrow">Services</p><h2>From idea to working software.</h2><p className="lead">Start with a focused consultation, then move into clearly defined development milestones.</p></div></section></>}
+import Link from "next/link";
+import { site } from "@/lib/site";
+
+export default function Home() {
+  return (
+    <>
+      <section className="hero">
+        <div className="hero-orbit orbit-one" />
+        <div className="hero-orbit orbit-two" />
+        <div className="container hero-grid">
+          <div className="hero-copy-block">
+            <p className="eyebrow">Independent software company</p>
+            <h1>Build.<br/>Master.<br/>Ascend.</h1>
+            <p className="hero-copy">
+              Altaris Labs creates ambitious software built around progression:
+              products that give people somewhere meaningful to go.
+            </p>
+            <div className="hero-actions">
+              <Link className="button primary" href="/games">Explore Ascent Games</Link>
+              <Link className="button secondary" href="/services">Build With Altaris</Link>
+            </div>
+          </div>
+          <div className="summit-mark" aria-hidden="true">
+            <svg viewBox="0 0 500 500">
+              <path d="M250 42 451 436H49L250 42Z" className="summit-outline"/>
+              <path d="M250 135 365 361H135L250 135Z" className="summit-inner"/>
+              <path d="M250 42v319" className="summit-line"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container manifesto-grid">
+          <p className="eyebrow">The Altaris principle</p>
+          <div>
+            <h2>Progress should be visible.</h2>
+            <p className="large-copy">
+              We design systems that turn challenge into momentum. Whether we are building
+              our own products or yours, every experience should make the next step clear,
+              meaningful, and worth pursuing.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section dark-panel">
+        <div className="container">
+          <div className="section-topline">
+            <div>
+              <p className="eyebrow">Product ecosystem</p>
+              <h2>Ascent Games</h2>
+            </div>
+            <Link className="text-link" href="/games">Explore the ecosystem →</Link>
+          </div>
+
+          <div className="feature-grid">
+            <article className="feature-card feature-card-large">
+              <span className="card-index">01</span>
+              <h3>One account.<br/>Progress everywhere.</h3>
+              <p>
+                Play across the Ascent family while your account level, Laurels,
+                achievements, and leaderboard standing follow you from game to game.
+              </p>
+              <Link className="text-link" href="/account">Ascent Account →</Link>
+            </article>
+            <article className="feature-card">
+              <span className="card-index">02</span>
+              <h3>Master each game.</h3>
+              <p>Training, competition, progression, and discovery built into each experience.</p>
+              <Link className="text-link" href="/games">View Games →</Link>
+            </article>
+            <article className="feature-card">
+              <span className="card-index">03</span>
+              <h3>Rise together.</h3>
+              <p>Cross-game rankings and achievements turn individual play into a larger journey.</p>
+              <Link className="text-link" href="/leaderboards">Leaderboards →</Link>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="section services-home">
+        <div className="container service-split">
+          <div>
+            <p className="eyebrow">Custom development</p>
+            <h2>Your idea.<br/>Built by Altaris.</h2>
+          </div>
+          <div>
+            <p className="large-copy">
+              Need an app of your own? Start with a $100 product consultation.
+              From there, development is scoped into transparent, milestone-based work.
+            </p>
+            <div className="hero-actions">
+              <Link className="button primary" href="/services">How We Build</Link>
+              <a className="button secondary" href={`mailto:${site.email}`}>Contact Us</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
