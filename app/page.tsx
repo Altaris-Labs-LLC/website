@@ -14,8 +14,8 @@ export default function Home() {
               bring your goals within reach.
             </p>
             <div className="hero-actions">
-              <Link className="button primary" href="/games">Explore Ascent Games</Link>
-              <Link className="button secondary" href="/services">Build With Altaris</Link>
+              <Link className="button primary" href="/services">Build With Altaris</Link>
+              <Link className="button secondary" href="/contact">Contact Us</Link>
             </div>
           </div>
         </div>
@@ -44,6 +44,7 @@ export default function Home() {
             Ascent Games brings deep, competitive games together in one place—built for
             players who want more than just a match.
           </p>
+          <p className="ascent-status">In development. The library is not public yet.</p>
 
           <div className="ascent-feature-grid">
             <article className="ascent-feature">
@@ -54,7 +55,6 @@ export default function Home() {
                 have never played before. Ascent is built to make discovery part of the
                 experience.
               </p>
-              <Link className="text-link" href="/games">Browse Games →</Link>
             </article>
             <article className="ascent-feature">
               <p className="ascent-feature-label">Master</p>
@@ -63,7 +63,6 @@ export default function Home() {
                 Learn, practice, analyze, and develop your game with tools designed to help
                 you understand more, improve faster, and keep climbing.
               </p>
-              <Link className="text-link" href="/games">Learn More →</Link>
             </article>
             <article className="ascent-feature">
               <p className="ascent-feature-label">Compete</p>
@@ -72,7 +71,6 @@ export default function Home() {
                 Face other players, machines, challenges, quests, rankings, and whatever
                 comes next. Every game is another opportunity to rise.
               </p>
-              <Link className="text-link" href="/leaderboards">Leaderboards →</Link>
             </article>
           </div>
         </div>
