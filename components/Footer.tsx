@@ -15,6 +15,7 @@ export default function Footer() {
         <div className="footer-links">
           <Link href="/games">Ascent Games</Link>
           <Link href="/services">Services</Link>
+          <Link href="/work">Work</Link>
           <Link href="/about">About</Link>
           <Link href="/support">Support</Link>
         </div>

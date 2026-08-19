@@ -87,12 +87,16 @@ export default function Home() {
           <div>
             <p className="large-copy">
               Need an app of your own? Start with a $100 product consultation.
-              From there, development is scoped into transparent, milestone-based work.
+              From there, work proceeds in paid milestones you can stop after any
+              one of them.
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/services">How We Build</Link>
               <Link className="button secondary" href="/contact">Contact Us</Link>
             </div>
+            <p className="home-work-link">
+              <Link className="text-link" href="/work">See past work →</Link>
+            </p>
           </div>
         </div>
       </section>
