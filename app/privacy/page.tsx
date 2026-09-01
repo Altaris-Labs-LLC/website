@@ -1,3 +1,5 @@
+import { site } from "@/lib/site";
+
 export const metadata = {
   title: "Privacy — Altaris Labs",
   description: "How Altaris Labs handles information submitted through this website.",
@@ -17,8 +19,11 @@ export default function Page() {
             sold or used for marketing lists.
           </p>
           <p className="large-copy">
-            This site does not currently offer public user accounts. Product
-            privacy terms will be published before Ascent Games accounts launch.
+            Ascent Games accounts store your email, display name, and a
+            password hash (or Google account identifier if you sign in with
+            Google) so you can return later. We do not sell this information
+            or use it for advertising. You can sign out at any time. Account
+            questions: {site.email}.
           </p>
         </div>
       </div>

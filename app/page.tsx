@@ -35,7 +35,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section dark-panel">
+      <Link href="/ascentgames" className="ascent-home-link">
+      <section className="section dark-panel ascent-home-section">
         <div className="container">
           <p className="eyebrow">Ascent Games</p>
           <h2 className="ascent-heading">Rise Above the Rest.</h2>
@@ -44,7 +45,7 @@ export default function Home() {
             Ascent Games brings deep, competitive games together in one place—built for
             players who want more than just a match.
           </p>
-          <p className="ascent-status">In development. The library is not public yet.</p>
+          <p className="ascent-status">Create an account or log in to get started →</p>
 
           <div className="ascent-feature-grid">
             <article className="ascent-feature">
@@ -75,6 +76,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </Link>
 
       <section className="section services-home">
         <div className="container service-split">

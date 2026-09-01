@@ -9,6 +9,7 @@ export default function Header() {
           <span>ALTARIS LABS</span>
         </Link>
         <nav aria-label="Primary navigation">
+          <Link href="/ascentgames">Ascent Games</Link>
           <Link href="/services">Services</Link>
           <Link href="/work">Work</Link>
           <Link href="/about">About</Link>

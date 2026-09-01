@@ -1,21 +1,22 @@
 export const metadata = {
-  title: "Leaderboards — Altaris Labs",
-  description: "Ascent Games leaderboards are not public yet.",
-  robots: { index: false, follow: false },
+  title: "Leaderboards — Ascent Games",
+  description: "Ascent Games leaderboards have moved.",
+  robots: { index: false, follow: true },
 };
 
 export default function Page() {
   return (
-    <section className="section process-intro">
-      <div className="container manifesto-grid">
-        <p className="eyebrow">Ascent Games</p>
-        <div>
-          <h2>Leaderboards are not public yet.</h2>
-          <p className="large-copy">
-            Rankings will appear here when Ascent Games launches. They are not
-            available yet.
-          </p>
-        </div>
+    <section className="ascent-section ascent-account-page">
+      <div className="container">
+        <p className="ascent-kicker">Ascent Games</p>
+        <h2>Leaderboards have moved.</h2>
+        <p className="ascent-lead">
+          Rankings now live at{" "}
+          <a className="text-link" href="/ascentgames/leaderboard">
+            altarislabs.dev/ascentgames/leaderboard
+          </a>
+          .
+        </p>
       </div>
     </section>
   );

@@ -1,0 +1,11 @@
+name = "altaris-labs"
+compatibility_date = "2026-08-30"
+pages_build_output_dir = "out"
+
+[vars]
+GOOGLE_CLIENT_ID = "186919460060-1qqmp9v2uvu8ud7de5ieonilh95t101h.apps.googleusercontent.com"
+
+[[d1_databases]]
+binding = "ASCENT_DB"
+database_name = "ascent-accounts"
+database_id = "b78d2c58-facd-4ab9-bc16-931e7b910dbf"

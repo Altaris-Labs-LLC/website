@@ -13,6 +13,7 @@ export default function Footer() {
           </p>
         </div>
         <div className="footer-links">
+          <Link href="/ascentgames">Ascent Games</Link>
           <Link href="/services">Services</Link>
           <Link href="/work">Work</Link>
           <Link href="/about">About</Link>
