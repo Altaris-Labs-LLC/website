@@ -17,15 +17,28 @@ export type YouRow = {
   points: number;
 };
 
-const LEADERBOARD_TZ = "America/Los_Angeles";
+/** US Pacific (PST UTC-8 / PDT UTC-7). One calendar for every player. */
+const PST_MINUTES = -8 * 60;
+const PDT_MINUTES = -7 * 60;
+
+function nthWeekdayUtc(year: number, monthIndex: number, weekday: number, n: number): number {
+  const first = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay();
+  return 1 + ((weekday - first + 7) % 7) + (n - 1) * 7;
+}
+
+/** US DST: 2nd Sunday of March 02:00 PST → 1st Sunday of November 02:00 PDT. */
+export function pacificOffsetMinutesEast(now: Date): number {
+  const y = now.getUTCFullYear();
+  const dstStart = Date.UTC(y, 2, nthWeekdayUtc(y, 2, 0, 2), 10, 0, 0);
+  const dstEnd = Date.UTC(y, 10, nthWeekdayUtc(y, 10, 0, 1), 9, 0, 0);
+  const t = now.getTime();
+  return t >= dstStart && t < dstEnd ? PDT_MINUTES : PST_MINUTES;
+}
 
 export function periodStartIso(period: string, now = new Date()): string | null {
   if (period === "all") return null;
 
-  // One Pacific calendar for every player so day/week/month/year reset
-  // together (PST in winter, PDT in summer). Not rolling windows, not UTC,
-  // not the viewer's local zone.
-  const offsetMin = offsetMinutesEastForTimeZone(now, LEADERBOARD_TZ);
+  const offsetMin = pacificOffsetMinutesEast(now);
   const offsetMs = offsetMin * 60 * 1000;
   const pacific = new Date(now.getTime() + offsetMs);
   const y = pacific.getUTCFullYear();
@@ -51,31 +64,10 @@ export function periodStartIso(period: string, now = new Date()): string | null 
   }
 }
 
-/** Minutes east of UTC for [timeZone] at [now] (PDT = -420, PST = -480). */
-export function offsetMinutesEastForTimeZone(now: Date, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(now);
-  const map: Record<string, string> = {};
-  for (const part of parts) {
-    if (part.type !== "literal") map[part.type] = part.value;
-  }
-  const asUtc = Date.UTC(
-    Number(map.year),
-    Number(map.month) - 1,
-    Number(map.day),
-    Number(map.hour),
-    Number(map.minute),
-    Number(map.second),
-  );
-  return Math.round((asUtc - now.getTime()) / 60_000);
+export function periodStartUnix(period: string, now = new Date()): number | null {
+  const iso = periodStartIso(period, now);
+  if (!iso) return null;
+  return Math.floor(new Date(iso).getTime() / 1000);
 }
 
 export function parseGameParam(value: string | null): string | "all" | null {
@@ -92,17 +84,20 @@ export function parsePeriodParam(value: string | null): string | null {
   return null;
 }
 
-function whereClause(game: string | "all", since: string | null) {
+function whereClause(game: string | "all", sinceUnix: number | null) {
   const parts: string[] = [];
-  const binds: string[] = [];
+  const binds: Array<string | number> = [];
   if (game !== "all") {
     parts.push("e.game_id = ?");
     binds.push(game);
   }
-  if (since) {
-    // Periods use the earn timestamp, not created_at (upload time).
-    parts.push("datetime(e.earned_at) >= datetime(?)");
-    binds.push(since);
+  if (sinceUnix != null) {
+    // Compare as unix seconds. SQLite datetime() mishandles trailing Z on
+    // ISO strings and would keep 5pm–midnight PDT plays in the next UTC day.
+    parts.push(
+      "CAST(strftime('%s', replace(substr(e.earned_at, 1, 19), 'T', ' ')) AS INTEGER) >= ?",
+    );
+    binds.push(sinceUnix);
   }
   return {
     sql: parts.length ? `WHERE ${parts.join(" AND ")}` : "",
@@ -116,8 +111,9 @@ export async function readLeaderboard(
   game: string | "all",
   period: string,
 ) {
-  const since = periodStartIso(period);
-  const filter = whereClause(game, since);
+  const sinceIso = periodStartIso(period);
+  const sinceUnix = periodStartUnix(period);
+  const filter = whereClause(game, sinceUnix);
   const viewer = await userFromRequest(env, request);
 
   const listed = await env.ASCENT_DB.prepare(
@@ -182,5 +178,12 @@ export async function readLeaderboard(
     };
   }
 
-  return json(request, { game, period, rows, you });
+  return json(request, {
+    game,
+    period,
+    timezone: "America/Los_Angeles",
+    since: sinceIso,
+    rows,
+    you,
+  });
 }
