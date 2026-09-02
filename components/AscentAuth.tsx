@@ -247,6 +247,11 @@ export default function AscentAuth() {
         >
           {status === "submitting" ? "Signing out…" : "Sign out"}
         </button>
+        <p className="auth-muted">
+          <a className="text-link" href="/ascentgames/account/delete">
+            Delete this account
+          </a>
+        </p>
         {error ? (
           <p className="contact-error" role="alert">
             {error}

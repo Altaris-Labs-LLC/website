@@ -77,6 +77,13 @@ export async function logOut() {
   await request<{ ok: boolean }>("/api/auth/logout", { method: "POST" });
 }
 
+export async function deleteAccount(confirmation: string) {
+  await request<{ ok: boolean }>("/api/auth/delete", {
+    method: "POST",
+    body: JSON.stringify({ confirmation }),
+  });
+}
+
 export const ASCENT_AUTH_CHANGED = "ascent-auth-changed";
 
 export function notifyAscentAuthChanged() {

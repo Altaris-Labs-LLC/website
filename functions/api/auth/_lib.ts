@@ -38,6 +38,7 @@ type UserRow = {
 
 const COMPLIMENTARY_LIFETIME_EMAILS = new Set([
   "brentunderwood@altarislabs.dev",
+  "play_review_premium@altarislabs.dev",
 ]);
 
 export const USER_COLUMNS =
@@ -353,6 +354,15 @@ export async function destroySession(env: Env, request: Request) {
   await env.ASCENT_DB.prepare(`DELETE FROM sessions WHERE token_hash = ?`)
     .bind(hash)
     .run();
+}
+
+export async function deleteAccountForUser(db: D1Database, userId: string) {
+  await db.batch([
+    db.prepare(`DELETE FROM sessions WHERE user_id = ?`).bind(userId),
+    db.prepare(`DELETE FROM laurel_events WHERE user_id = ?`).bind(userId),
+    db.prepare(`DELETE FROM subscription_purchases WHERE user_id = ?`).bind(userId),
+    db.prepare(`DELETE FROM users WHERE id = ?`).bind(userId),
+  ]);
 }
 
 export async function findUserByEmail(db: D1Database, email: string) {

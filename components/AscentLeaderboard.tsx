@@ -90,6 +90,7 @@ export default function AscentLeaderboard() {
       <p className="ascent-leaderboard-status">
         Periods follow Pacific Time so every player resets at the same moment.
       </p>
+      {loading ? (
         <p className="ascent-leaderboard-status">Loading ranks…</p>
       ) : error ? (
         <p className="ascent-leaderboard-status ascent-leaderboard-error">{error}</p>
