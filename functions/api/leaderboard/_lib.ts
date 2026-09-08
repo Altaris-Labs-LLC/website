@@ -2,7 +2,10 @@ import { json, userFromRequest, type Env } from "../auth/_lib";
 
 export const GAMES = new Set(["chess", "checkers"]);
 export const PERIODS = new Set(["daily", "weekly", "monthly", "yearly", "all"]);
+export const METRICS = new Set(["laurels", "puzzles"]);
 const BOARD_LIMIT = 100;
+
+export type LeaderboardMetric = "laurels" | "puzzles";
 
 export type LeaderboardRow = {
   rank: number;
@@ -84,12 +87,37 @@ export function parsePeriodParam(value: string | null): string | null {
   return null;
 }
 
-function whereClause(game: string | "all", sinceUnix: number | null) {
+export function parseMetricParam(value: string | null): LeaderboardMetric {
+  const metric = (value || "laurels").trim().toLowerCase();
+  if (
+    metric === "puzzles" ||
+    metric === "puzzle" ||
+    metric === "puzzle_contributions" ||
+    metric === "puzzle_contribution"
+  ) {
+    return "puzzles";
+  }
+  return "laurels";
+}
+
+function whereClause(
+  game: string | "all",
+  sinceUnix: number | null,
+  metric: LeaderboardMetric,
+) {
   const parts: string[] = [];
   const binds: Array<string | number> = [];
   if (game !== "all") {
     parts.push("e.game_id = ?");
     binds.push(game);
+  }
+  if (metric === "puzzles") {
+    parts.push("e.kind = ?");
+    binds.push("puzzle_contribution");
+  } else {
+    // Laurels board: earn + legacy backfill. Treat missing kind as earn
+    // (rows written before the kind column existed).
+    parts.push("(e.kind IS NULL OR e.kind IN ('earn', 'legacy_backfill', ''))");
   }
   if (sinceUnix != null) {
     // Compare as unix seconds. SQLite datetime() mishandles trailing Z on
@@ -110,10 +138,11 @@ export async function readLeaderboard(
   request: Request,
   game: string | "all",
   period: string,
+  metric: LeaderboardMetric = "laurels",
 ) {
   const sinceIso = periodStartIso(period);
   const sinceUnix = periodStartUnix(period);
-  const filter = whereClause(game, sinceUnix);
+  const filter = whereClause(game, sinceUnix, metric);
   const viewer = await userFromRequest(env, request);
 
   const listed = await env.ASCENT_DB.prepare(
@@ -181,6 +210,7 @@ export async function readLeaderboard(
   return json(request, {
     game,
     period,
+    metric,
     timezone: "America/Los_Angeles",
     since: sinceIso,
     rows,

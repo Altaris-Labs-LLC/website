@@ -9,3 +9,7 @@ GOOGLE_CLIENT_ID = "186919460060-1qqmp9v2uvu8ud7de5ieonilh95t101h.apps.googleuse
 binding = "ASCENT_DB"
 database_name = "ascent-accounts"
 database_id = "b78d2c58-facd-4ab9-bc16-931e7b910dbf"
+
+[[r2_buckets]]
+binding = "ASCENT_BACKUPS"
+bucket_name = "ascent-backups"

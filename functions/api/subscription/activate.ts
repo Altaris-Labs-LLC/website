@@ -8,9 +8,13 @@ import {
   type Env,
 } from "../auth/_lib";
 
-const PRODUCTS: Record<string, { plan: "monthly" | "yearly"; days: number }> = {
-  ascent_premium_monthly: { plan: "monthly", days: 31 },
-  ascent_premium_yearly: { plan: "yearly", days: 366 },
+const PRODUCTS: Record<
+  string,
+  { kind: "premium" | "ads_free"; plan: string; days: number }
+> = {
+  ascent_premium_monthly: { kind: "premium", plan: "monthly", days: 31 },
+  ascent_premium_yearly: { kind: "premium", plan: "yearly", days: 366 },
+  ascent_ad_free_month: { kind: "ads_free", plan: "ads_free", days: 31 },
 };
 
 const PLATFORMS = new Set(["apple", "google", "stripe"]);
@@ -69,7 +73,7 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
   const now = new Date().toISOString();
   const expiresAt = parseExpiresAt(body?.expiresAt, product.days);
 
-  await context.env.ASCENT_DB.prepare(
+  const inserted = await context.env.ASCENT_DB.prepare(
     `INSERT OR IGNORE INTO subscription_purchases
       (id, user_id, platform, product_id, purchase_id, plan, expires_at, verification_data, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -86,6 +90,23 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
       now,
     )
     .run();
+  const isNewPurchase = (inserted.meta?.changes ?? 0) > 0;
+
+  if (product.kind === "ads_free") {
+    if (isNewPurchase) {
+      const current = user.ads_free_until ? new Date(user.ads_free_until).getTime() : 0;
+      const base = Math.max(current, Date.now());
+      const next = new Date(base + product.days * 24 * 60 * 60 * 1000).toISOString();
+      await context.env.ASCENT_DB.prepare(
+        `UPDATE users SET ads_free_until = ? WHERE id = ?`,
+      )
+        .bind(next, user.id)
+        .run();
+      user.ads_free_until = next;
+    }
+    const pub = publicUser(user);
+    return json(context.request, { user: pub, subscription: pub.subscription });
+  }
 
   const currentPlan = (user.premium_plan || "none") as AuthPlan;
   if (currentPlan !== "lifetime") {

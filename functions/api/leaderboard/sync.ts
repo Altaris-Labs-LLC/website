@@ -9,12 +9,16 @@ import { GAMES } from "./_lib";
 
 const MAX_EVENTS = 500;
 const MAX_POINTS = 10_000;
+/** Client one-shot backfill uses 2020-01-01 so it does not inflate "today". */
+const LEGACY_CUTOFF_ISO = "2021-01-01T00:00:00.000Z";
+const LEGACY_CUTOFF_MS = Date.UTC(2021, 0, 1);
 
 type SyncEvent = {
   id?: unknown;
   gameId?: unknown;
   points?: unknown;
   earnedAt?: unknown;
+  kind?: unknown;
 };
 
 type SyncBody = {
@@ -33,6 +37,18 @@ function parseIso(value: unknown): string | null {
   const oldest = now - 20 * 365 * 24 * 60 * 60 * 1000;
   if (t < oldest) return new Date(oldest).toISOString();
   return date.toISOString();
+}
+
+function eventKind(event: SyncEvent): string {
+  const kind = typeof event.kind === "string" ? event.kind.trim() : "";
+  if (kind === "legacy_backfill" || kind === "puzzle_contribution") return kind;
+  return "earn";
+}
+
+function isLegacyBackfill(event: SyncEvent, earnedAt: string): boolean {
+  if (eventKind(event) === "legacy_backfill") return true;
+  const t = new Date(earnedAt).getTime();
+  return Number.isFinite(t) && t < LEGACY_CUTOFF_MS;
 }
 
 export async function onRequestPost(context: EventContext<Env, string, unknown>) {
@@ -54,6 +70,25 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
   const statements: D1PreparedStatement[] = [];
   let accepted = 0;
 
+  const existingRows = await context.env.ASCENT_DB.prepare(
+    `SELECT game_id AS game_id,
+            COUNT(*) AS total,
+            SUM(CASE WHEN earned_at < ? THEN 1 ELSE 0 END) AS legacy
+     FROM laurel_events
+     WHERE user_id = ?
+     GROUP BY game_id`,
+  )
+    .bind(LEGACY_CUTOFF_ISO, user.id)
+    .all<{ game_id: string; total: number; legacy: number }>();
+  const existing = new Map<string, { total: number; legacy: number }>();
+  for (const row of existingRows.results || []) {
+    existing.set(row.game_id, {
+      total: Number(row.total) || 0,
+      legacy: Number(row.legacy) || 0,
+    });
+  }
+  const acceptedLegacy = new Set<string>();
+
   for (const event of rawEvents) {
     const id = typeof event.id === "string" ? event.id.trim() : "";
     if (!id || id.length > 80) continue;
@@ -68,12 +103,20 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     const pts = Math.min(MAX_POINTS, Math.round(points));
     const earnedAt = parseIso(event.earnedAt);
     if (!earnedAt) continue;
+    if (isLegacyBackfill(event, earnedAt)) {
+      const prior = existing.get(gameId) ?? { total: 0, legacy: 0 };
+      if (prior.total > 0 || prior.legacy > 0 || acceptedLegacy.has(gameId)) {
+        continue;
+      }
+      acceptedLegacy.add(gameId);
+    }
+    const kind = eventKind(event);
     statements.push(
       context.env.ASCENT_DB.prepare(
         `INSERT OR IGNORE INTO laurel_events
-          (id, user_id, game_id, points, earned_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      ).bind(id, user.id, gameId, pts, earnedAt, now),
+          (id, user_id, game_id, points, earned_at, created_at, kind)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(id, user.id, gameId, pts, earnedAt, now, kind),
     );
     accepted += 1;
   }

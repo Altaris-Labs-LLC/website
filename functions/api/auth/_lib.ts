@@ -2,6 +2,7 @@ export interface Env {
   ASCENT_DB: D1Database;
   AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
+  ASCENT_BACKUPS?: R2Bucket;
 }
 
 export type AuthPlan = "none" | "monthly" | "yearly" | "lifetime";
@@ -20,6 +21,7 @@ export type AuthUser = {
   avatarUrl: string | null;
   createdAt: string;
   subscription: AuthSubscription;
+  adsFreeUntil: string | null;
 };
 
 type UserRow = {
@@ -34,6 +36,7 @@ type UserRow = {
   premium_plan?: string | null;
   premium_expires_at?: string | null;
   premium_source?: string | null;
+  ads_free_until?: string | null;
 };
 
 const COMPLIMENTARY_LIFETIME_EMAILS = new Set([
@@ -42,10 +45,10 @@ const COMPLIMENTARY_LIFETIME_EMAILS = new Set([
 ]);
 
 export const USER_COLUMNS =
-  "id, email, password_hash, display_name, google_sub, avatar_url, created_at, last_seen_at, premium_plan, premium_expires_at, premium_source";
+  "id, email, password_hash, display_name, google_sub, avatar_url, created_at, last_seen_at, premium_plan, premium_expires_at, premium_source, ads_free_until";
 
 export const USER_COLUMNS_U =
-  "u.id, u.email, u.password_hash, u.display_name, u.google_sub, u.avatar_url, u.created_at, u.last_seen_at, u.premium_plan, u.premium_expires_at, u.premium_source";
+  "u.id, u.email, u.password_hash, u.display_name, u.google_sub, u.avatar_url, u.created_at, u.last_seen_at, u.premium_plan, u.premium_expires_at, u.premium_source, u.ads_free_until";
 
 const SESSION_DAYS = 30;
 const PBKDF2_ITERATIONS = 100_000;
@@ -67,7 +70,7 @@ export function corsHeaders(request: Request): HeadersInit {
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Part-Sha256",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     Vary: "Origin",
   };
@@ -135,6 +138,9 @@ export function resolveSubscription(row: UserRow): AuthSubscription {
 }
 
 export function publicUser(row: UserRow): AuthUser {
+  const adsUntil = row.ads_free_until || null;
+  const adsFreeUntil =
+    adsUntil && new Date(adsUntil).getTime() > Date.now() ? adsUntil : null;
   return {
     id: row.id,
     email: row.email,
@@ -142,6 +148,7 @@ export function publicUser(row: UserRow): AuthUser {
     avatarUrl: row.avatar_url,
     createdAt: row.created_at,
     subscription: resolveSubscription(row),
+    adsFreeUntil,
   };
 }
 
@@ -356,13 +363,31 @@ export async function destroySession(env: Env, request: Request) {
     .run();
 }
 
-export async function deleteAccountForUser(db: D1Database, userId: string) {
+export async function deleteAccountForUser(
+  db: D1Database,
+  userId: string,
+  backups?: R2Bucket,
+) {
   await db.batch([
     db.prepare(`DELETE FROM sessions WHERE user_id = ?`).bind(userId),
     db.prepare(`DELETE FROM laurel_events WHERE user_id = ?`).bind(userId),
     db.prepare(`DELETE FROM subscription_purchases WHERE user_id = ?`).bind(userId),
+    db.prepare(`DELETE FROM cloud_backup_manifests WHERE user_id = ?`).bind(userId),
     db.prepare(`DELETE FROM users WHERE id = ?`).bind(userId),
   ]);
+  if (backups) {
+    let cursor: string | undefined;
+    do {
+      const listed = await backups.list({
+        prefix: `u/${userId}/`,
+        cursor,
+      });
+      if (listed.objects.length) {
+        await Promise.all(listed.objects.map((object) => backups.delete(object.key)));
+      }
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+  }
 }
 
 export async function findUserByEmail(db: D1Database, email: string) {
@@ -412,6 +437,7 @@ export async function insertUser(
     premium_plan: "none",
     premium_expires_at: null,
     premium_source: null,
+    ads_free_until: null,
   };
   await db
     .prepare(

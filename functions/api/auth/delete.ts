@@ -31,7 +31,11 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     );
   }
 
-  await deleteAccountForUser(context.env.ASCENT_DB, user.id);
+  await deleteAccountForUser(
+    context.env.ASCENT_DB,
+    user.id,
+    context.env.ASCENT_BACKUPS,
+  );
   return json(context.request, { ok: true }, 200, {
     "Set-Cookie": clearSessionCookie(context.request),
   });
