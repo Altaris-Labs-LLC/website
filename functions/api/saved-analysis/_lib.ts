@@ -65,7 +65,37 @@ export function shouldPersistEngineAnalysis(opts: {
 
 export function hasSavedEvalData(row: SavedAnalysisRow | null): boolean {
   if (!row) return false;
-  return asInt(row.eval_depth) > 0 || Boolean((row.eval_data || "").trim());
+  return evalPayloadHasMoves(row.eval_data || "");
+}
+
+/** True when eval_data contains at least one move UCI (`ms` or `ln`). */
+export function evalPayloadHasMoves(evalData: string): boolean {
+  const raw = (evalData || "").trim();
+  if (!raw || raw === "{}" || raw === "null") return false;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    let rows: unknown[] | null = null;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      let best = -1;
+      for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+        const d = Number.parseInt(key, 10);
+        if (!Number.isFinite(d) || d < best || !Array.isArray(value)) continue;
+        best = d;
+        rows = value;
+      }
+    } else if (Array.isArray(parsed)) {
+      rows = parsed;
+    }
+    if (!rows || rows.length === 0) return false;
+    for (const row of rows) {
+      if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+      const rec = row as Record<string, unknown>;
+      if (String(rec.ms ?? "").trim() || String(rec.ln ?? "").trim()) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export function hasSavedAdvantageData(row: SavedAnalysisRow | null): boolean {

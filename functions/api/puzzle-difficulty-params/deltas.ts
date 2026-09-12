@@ -6,12 +6,15 @@ import {
 } from "../auth/_lib";
 
 const GAMES = new Set(["chess", "checkers"]);
+const PUZZLE_TYPES = new Set(["tactic", "conversion", "strategic"]);
 const MAX_CEC_DELTA = 10;
 const MAX_KC_DELTA = 10;
 const MAX_EXPOSURES_DELTA = 100;
 
 type Body = {
   gameId?: unknown;
+  puzzleType?: unknown;
+  puzzle_type?: unknown;
   difficulty_computer_elo_coefficient_delta?: unknown;
   difficulty_knowledge_coefficient_delta?: unknown;
   exposures_delta?: unknown;
@@ -19,6 +22,15 @@ type Body = {
 
 function gameIdOf(raw: unknown): string {
   return typeof raw === "string" ? raw.trim().toLowerCase() : "";
+}
+
+function puzzleTypeOf(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const t = raw.trim().toLowerCase();
+  if (t === "strategy" || t === "strategic") return "strategic";
+  if (t === "tactics" || t === "tactic") return "tactic";
+  if (t === "conversion") return "conversion";
+  return t;
 }
 
 function asNum(value: unknown): number {
@@ -36,12 +48,16 @@ function asInt(value: unknown): number {
 
 export async function onRequestPost(context: EventContext<Env, string, unknown>) {
   if (!requireSecret(context.env)) {
-    return json(context.request, { error: "Endgame params unavailable." }, 503);
+    return json(context.request, { error: "Puzzle params unavailable." }, 503);
   }
   const body = await readJson<Body>(context.request);
   const gameId = gameIdOf(body?.gameId);
   if (!GAMES.has(gameId)) {
     return json(context.request, { error: "Invalid gameId." }, 400);
+  }
+  const puzzleType = puzzleTypeOf(body?.puzzleType ?? body?.puzzle_type);
+  if (!PUZZLE_TYPES.has(puzzleType)) {
+    return json(context.request, { error: "Invalid puzzleType." }, 400);
   }
 
   let cecDelta = asNum(body?.difficulty_computer_elo_coefficient_delta);
@@ -56,20 +72,21 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
 
   const now = new Date().toISOString();
   await context.env.ASCENT_DB.prepare(
-    `INSERT INTO endgame_difficulty_params
-       (game_id, difficulty_computer_elo_coefficient,
+    `INSERT INTO puzzle_difficulty_params
+       (game_id, puzzle_type, difficulty_computer_elo_coefficient,
         difficulty_knowledge_coefficient, exposures, updated_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(game_id) DO UPDATE SET
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(game_id, puzzle_type) DO UPDATE SET
        difficulty_computer_elo_coefficient =
-         COALESCE(endgame_difficulty_params.difficulty_computer_elo_coefficient, 1.0) + ?,
+         COALESCE(puzzle_difficulty_params.difficulty_computer_elo_coefficient, 1.0) + ?,
        difficulty_knowledge_coefficient =
-         endgame_difficulty_params.difficulty_knowledge_coefficient + ?,
-       exposures = MAX(0, endgame_difficulty_params.exposures + ?),
+         puzzle_difficulty_params.difficulty_knowledge_coefficient + ?,
+       exposures = MAX(0, puzzle_difficulty_params.exposures + ?),
        updated_at = ?`,
   )
     .bind(
       gameId,
+      puzzleType,
       1.0 + cecDelta,
       1.0 + kcDelta,
       Math.max(0, expDelta),

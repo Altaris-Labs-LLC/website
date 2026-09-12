@@ -18,6 +18,7 @@ import {
   hasSavedDifficultyData,
   hasSavedEvalData,
   hasSavedOrthodoxyData,
+  evalPayloadHasMoves,
   publicSavedAnalysis,
   sharpnessFromAdvantageData,
   shouldPersistEngineAnalysis,
@@ -129,9 +130,10 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     .first<SavedAnalysisRow>();
 
   const savedEvalDepth = asInt(existing?.eval_depth);
+  const incomingEvalHasMoves = evalPayloadHasMoves(evalEngine.data);
   const saveEval = shouldPersistEngineAnalysis({
-    ranThisSession: evalEngine.ran,
-    currentDepth: evalEngine.depth,
+    ranThisSession: evalEngine.ran && incomingEvalHasMoves,
+    currentDepth: incomingEvalHasMoves ? evalEngine.depth : 0,
     savedDepth: savedEvalDepth,
     hasExistingSavedData: hasSavedEvalData(existing),
   });

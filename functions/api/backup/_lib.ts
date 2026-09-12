@@ -22,7 +22,7 @@ export const PART_NAMES = new Set([
   "overlay_lessons_official",
   "table_lessons_unofficial",
 ]);
-export const MAX_PART_BYTES = 8 * 1024 * 1024;
+export const MAX_PART_BYTES = 32 * 1024 * 1024;
 export const KEEP_REVISIONS = 3;
 const SHA_RE = /^[a-f0-9]{64}$/;
 

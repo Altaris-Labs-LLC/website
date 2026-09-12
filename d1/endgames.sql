@@ -16,6 +16,7 @@ CREATE INDEX IF NOT EXISTS idx_endgame_positions_updated
 
 CREATE TABLE IF NOT EXISTS endgame_difficulty_params (
   game_id TEXT PRIMARY KEY,
+  difficulty_computer_elo_coefficient REAL NOT NULL DEFAULT 1.0,
   difficulty_knowledge_coefficient REAL NOT NULL DEFAULT 1.0,
   exposures INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL

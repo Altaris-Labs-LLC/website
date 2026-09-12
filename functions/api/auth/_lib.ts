@@ -41,6 +41,7 @@ type UserRow = {
 
 const COMPLIMENTARY_LIFETIME_EMAILS = new Set([
   "brentunderwood@altarislabs.dev",
+  "brentwoodunderwood@gmail.com",
   "play_review_premium@altarislabs.dev",
 ]);
 

@@ -9,6 +9,8 @@ const GAMES = new Set(["chess", "checkers"]);
 
 type ParamsBody = {
   gameId?: unknown;
+  difficulty_computer_elo_coefficient?: unknown;
+  computerEloCoefficient?: unknown;
   difficulty_knowledge_coefficient?: unknown;
   knowledgeCoefficient?: unknown;
   exposures?: unknown;
@@ -42,18 +44,22 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>) 
   }
 
   const row = await context.env.ASCENT_DB.prepare(
-    `SELECT difficulty_knowledge_coefficient, exposures
+    `SELECT difficulty_computer_elo_coefficient,
+            difficulty_knowledge_coefficient, exposures
      FROM endgame_difficulty_params
      WHERE game_id = ?`,
   )
     .bind(gameId)
     .first<{
+      difficulty_computer_elo_coefficient: number | null;
       difficulty_knowledge_coefficient: number;
       exposures: number;
     }>();
 
   return json(context.request, {
     gameId,
+    difficulty_computer_elo_coefficient:
+      row?.difficulty_computer_elo_coefficient ?? 1.0,
     difficulty_knowledge_coefficient: row?.difficulty_knowledge_coefficient ?? 1.0,
     exposures: row?.exposures ?? 0,
   });
@@ -69,6 +75,10 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
   if (!GAMES.has(gameId)) {
     return json(context.request, { error: "Invalid gameId." }, 400);
   }
+  const cec = asNum(
+    body?.difficulty_computer_elo_coefficient ?? body?.computerEloCoefficient,
+    1.0,
+  );
   const kc = asNum(
     body?.difficulty_knowledge_coefficient ?? body?.knowledgeCoefficient,
     1.0,
@@ -78,19 +88,24 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
 
   await context.env.ASCENT_DB.prepare(
     `INSERT INTO endgame_difficulty_params
-       (game_id, difficulty_knowledge_coefficient, exposures, updated_at)
-     VALUES (?, ?, ?, ?)
+       (game_id, difficulty_computer_elo_coefficient,
+        difficulty_knowledge_coefficient, exposures, updated_at)
+     VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(game_id) DO UPDATE SET
-       difficulty_knowledge_coefficient = excluded.difficulty_knowledge_coefficient,
+       difficulty_computer_elo_coefficient =
+         excluded.difficulty_computer_elo_coefficient,
+       difficulty_knowledge_coefficient =
+         excluded.difficulty_knowledge_coefficient,
        exposures = excluded.exposures,
        updated_at = excluded.updated_at`,
   )
-    .bind(gameId, kc, exposures, now)
+    .bind(gameId, cec, kc, exposures, now)
     .run();
 
   return json(context.request, {
     ok: true,
     gameId,
+    difficulty_computer_elo_coefficient: cec,
     difficulty_knowledge_coefficient: kc,
     exposures,
   });
