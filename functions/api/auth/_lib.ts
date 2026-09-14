@@ -3,6 +3,9 @@ export interface Env {
   AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
   ASCENT_BACKUPS?: R2Bucket;
+  ASCENT_FILES?: R2Bucket;
+  /** Resend API key for transactional mail (feedback alerts, etc.). */
+  RESEND_API_KEY?: string;
 }
 
 export type AuthPlan = "none" | "monthly" | "yearly" | "lifetime";
