@@ -5,3 +5,7 @@ out
 *.log
 .dev.vars
 .wrangler
+
+.env
+.env.local
+

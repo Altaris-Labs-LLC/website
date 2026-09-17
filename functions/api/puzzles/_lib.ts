@@ -61,6 +61,11 @@ export type PuzzleRow = {
   game_played_on: string | null;
   difficulty: number;
   view_count: number;
+  flag_multiple_correct?: number;
+  flag_engine_best_fails?: number;
+  flag_unwinnable?: number;
+  flag_dislike?: number;
+  flag_other?: number;
   updated_at: string;
 };
 

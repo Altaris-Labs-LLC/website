@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS puzzle_positions (
   game_played_on TEXT,
   difficulty REAL NOT NULL DEFAULT 1200,
   view_count INTEGER NOT NULL DEFAULT 0,
+  flag_multiple_correct INTEGER NOT NULL DEFAULT 0,
+  flag_engine_best_fails INTEGER NOT NULL DEFAULT 0,
+  flag_unwinnable INTEGER NOT NULL DEFAULT 0,
+  flag_dislike INTEGER NOT NULL DEFAULT 0,
+  flag_other INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL,
   PRIMARY KEY (game_id, puzzle_type, fen)
 );

@@ -13,3 +13,7 @@ database_id = "b78d2c58-facd-4ab9-bc16-931e7b910dbf"
 [[r2_buckets]]
 binding = "ASCENT_BACKUPS"
 bucket_name = "ascent-backups"
+
+[[r2_buckets]]
+binding = "ASCENT_FILES"
+bucket_name = "ascent-files"
