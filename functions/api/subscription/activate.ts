@@ -12,9 +12,29 @@ const PRODUCTS: Record<
   string,
   { kind: "premium" | "ads_free"; plan: string; days: number }
 > = {
+  // Shared / legacy IDs (website Stripe or older clients).
   ascent_premium_monthly: { kind: "premium", plan: "monthly", days: 31 },
   ascent_premium_yearly: { kind: "premium", plan: "yearly", days: 366 },
   ascent_ad_free_month: { kind: "ads_free", plan: "ads_free", days: 31 },
+  // Per-app App Store products — same account entitlement.
+  chess_ascent_premium_monthly: { kind: "premium", plan: "monthly", days: 31 },
+  chess_ascent_premium_annual: { kind: "premium", plan: "yearly", days: 366 },
+  chess_ascent_ad_free_month: { kind: "ads_free", plan: "ads_free", days: 31 },
+  checkers_ascent_premium_monthly: {
+    kind: "premium",
+    plan: "monthly",
+    days: 31,
+  },
+  checkers_ascent_premium_annual: {
+    kind: "premium",
+    plan: "yearly",
+    days: 366,
+  },
+  checkers_ascent_ad_free_month: {
+    kind: "ads_free",
+    plan: "ads_free",
+    days: 31,
+  },
 };
 
 const PLATFORMS = new Set(["apple", "google", "stripe"]);

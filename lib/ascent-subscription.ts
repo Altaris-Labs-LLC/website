@@ -1,6 +1,7 @@
 export const ASCENT_PLANS = [
   {
     id: "monthly",
+    // Display-only on the website; native IAP IDs are per-app (chess_/checkers_).
     productId: "ascent_premium_monthly",
     title: "Monthly",
     price: "$5.99",
