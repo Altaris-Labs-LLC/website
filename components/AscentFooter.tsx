@@ -17,6 +17,7 @@ export default function AscentFooter() {
           <Link href="/ascentgames#library">Games</Link>
           <Link href="/ascentgames/subscription">Subscription</Link>
           <Link href="/ascentgames/leaderboard">Leaderboard</Link>
+          <Link href="/ascentgames/support">Support</Link>
           <Link href="/privacy">Privacy</Link>
         </div>
       </div>

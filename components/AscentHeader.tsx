@@ -21,6 +21,7 @@ export default function AscentHeader() {
           <Link href="/ascentgames#library">Games</Link>
           <Link href="/ascentgames/subscription">Subscription</Link>
           <Link href="/ascentgames/leaderboard">Leaderboard</Link>
+          <Link href="/ascentgames/support">Support</Link>
           <AscentAccountLink />
         </nav>
         <Link className="ascent-leave" href="/" title="Leave Ascent Games">
