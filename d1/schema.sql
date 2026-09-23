@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT,
   display_name TEXT NOT NULL,
   google_sub TEXT UNIQUE,
+  apple_sub TEXT UNIQUE,
   avatar_url TEXT,
   created_at TEXT NOT NULL,
   last_seen_at TEXT NOT NULL,

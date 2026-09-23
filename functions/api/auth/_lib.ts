@@ -33,6 +33,7 @@ type UserRow = {
   password_hash: string | null;
   display_name: string;
   google_sub: string | null;
+  apple_sub: string | null;
   avatar_url: string | null;
   created_at: string;
   last_seen_at: string;
@@ -49,10 +50,10 @@ const COMPLIMENTARY_LIFETIME_EMAILS = new Set([
 ]);
 
 export const USER_COLUMNS =
-  "id, email, password_hash, display_name, google_sub, avatar_url, created_at, last_seen_at, premium_plan, premium_expires_at, premium_source, ads_free_until";
+  "id, email, password_hash, display_name, google_sub, apple_sub, avatar_url, created_at, last_seen_at, premium_plan, premium_expires_at, premium_source, ads_free_until";
 
 export const USER_COLUMNS_U =
-  "u.id, u.email, u.password_hash, u.display_name, u.google_sub, u.avatar_url, u.created_at, u.last_seen_at, u.premium_plan, u.premium_expires_at, u.premium_source, u.ads_free_until";
+  "u.id, u.email, u.password_hash, u.display_name, u.google_sub, u.apple_sub, u.avatar_url, u.created_at, u.last_seen_at, u.premium_plan, u.premium_expires_at, u.premium_source, u.ads_free_until";
 
 const SESSION_DAYS = 30;
 const PBKDF2_ITERATIONS = 100_000;
@@ -406,6 +407,18 @@ export async function findUserByEmail(db: D1Database, email: string) {
   return ensureComplimentary(db, row);
 }
 
+export async function findUserByAppleSub(db: D1Database, sub: string) {
+  const row = await db
+    .prepare(
+      `SELECT ${USER_COLUMNS}
+       FROM users WHERE apple_sub = ?`,
+    )
+    .bind(sub)
+    .first<UserRow>();
+  if (!row) return null;
+  return ensureComplimentary(db, row);
+}
+
 export async function findUserByGoogleSub(db: D1Database, sub: string) {
   const row = await db
     .prepare(
@@ -425,6 +438,7 @@ export async function insertUser(
     displayName: string;
     passwordHash?: string | null;
     googleSub?: string | null;
+    appleSub?: string | null;
     avatarUrl?: string | null;
   },
 ) {
@@ -435,6 +449,7 @@ export async function insertUser(
     password_hash: input.passwordHash ?? null,
     display_name: input.displayName,
     google_sub: input.googleSub ?? null,
+    apple_sub: input.appleSub ?? null,
     avatar_url: input.avatarUrl ?? null,
     created_at: now,
     last_seen_at: now,
@@ -446,8 +461,8 @@ export async function insertUser(
   await db
     .prepare(
       `INSERT INTO users
-        (id, email, password_hash, display_name, google_sub, avatar_url, created_at, last_seen_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, email, password_hash, display_name, google_sub, apple_sub, avatar_url, created_at, last_seen_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       user.id,
@@ -455,6 +470,7 @@ export async function insertUser(
       user.password_hash,
       user.display_name,
       user.google_sub,
+      user.apple_sub,
       user.avatar_url,
       user.created_at,
       user.last_seen_at,
@@ -477,6 +493,73 @@ type GoogleJwtPayload = {
 type GoogleJwks = {
   keys: Array<JsonWebKey & { kid?: string }>;
 };
+
+const APPLE_ISSUER = "https://appleid.apple.com";
+const APPLE_AUDIENCES = new Set([
+  "dev.altarislabs.ascentgames.chess",
+  "dev.altarislabs.ascentgames.checkers",
+]);
+
+type AppleJwtPayload = {
+  iss?: string;
+  aud?: string | string[];
+  exp?: number;
+  email?: string;
+  sub?: string;
+  nonce?: string;
+};
+
+export async function verifyAppleIdToken(token: string, rawNonce: string) {
+  const parts = token.split(".");
+  if (parts.length !== 3 || !rawNonce) throw new Error("invalid_token");
+  const header = JSON.parse(
+    new TextDecoder().decode(base64UrlToBytes(parts[0])),
+  ) as { kid?: string; alg?: string };
+  const payload = JSON.parse(
+    new TextDecoder().decode(base64UrlToBytes(parts[1])),
+  ) as AppleJwtPayload;
+  if (header.alg !== "RS256" || !header.kid) throw new Error("invalid_token");
+
+  const jwks = (await fetch("https://appleid.apple.com/auth/keys").then((res) => {
+    if (!res.ok) throw new Error("certs_unavailable");
+    return res.json();
+  })) as GoogleJwks;
+  const jwk = jwks.keys.find((key) => key.kid === header.kid);
+  if (!jwk) throw new Error("unknown_key");
+
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"],
+  );
+  const valid = await crypto.subtle.verify(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    base64UrlToBytes(parts[2]) as BufferSource,
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+  );
+  if (!valid) throw new Error("invalid_signature");
+
+  const audience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  const audienceOk = audience.some((value) => value && APPLE_AUDIENCES.has(value));
+  const expectedNonce = await sha256Hex(rawNonce);
+  if (
+    payload.iss !== APPLE_ISSUER ||
+    !audienceOk ||
+    !payload.exp ||
+    payload.exp * 1000 <= Date.now() ||
+    !payload.sub ||
+    payload.nonce !== expectedNonce
+  ) {
+    throw new Error("invalid_claims");
+  }
+
+  const email = payload.email ? normalizeEmail(payload.email) : null;
+  if (email && !isValidEmail(email)) throw new Error("invalid_claims");
+  return { email, sub: payload.sub };
+}
 
 export async function verifyGoogleIdToken(token: string, clientId: string) {
   const parts = token.split(".");
