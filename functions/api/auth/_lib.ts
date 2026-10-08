@@ -6,6 +6,21 @@ export interface Env {
   ASCENT_FILES?: R2Bucket;
   /** Resend API key for transactional mail (feedback alerts, etc.). */
   RESEND_API_KEY?: string;
+  /** Stripe secret key. Card and PayPal checkout never touches card numbers. */
+  STRIPE_SECRET_KEY?: string;
+  /** Publishable key for Stripe.js on the subscription page. */
+  STRIPE_PUBLISHABLE_KEY?: string;
+  /** Stripe webhook signing secret for /api/subscription/webhook. */
+  STRIPE_WEBHOOK_SECRET?: string;
+  /** App Store Server API key (In-App Purchase key) for Gold receipts. */
+  APPLE_IAP_KEY_ID?: string;
+  APPLE_IAP_ISSUER_ID?: string;
+  /** Contents of the AuthKey_XXXX.p8 file. */
+  APPLE_IAP_PRIVATE_KEY?: string;
+  /** Google Play service-account JSON for Gold receipts. */
+  GOOGLE_PLAY_SERVICE_ACCOUNT?: string;
+  /** Shared token in the Play real-time developer notification push URL. */
+  GOOGLE_RTDN_TOKEN?: string;
 }
 
 export type AuthPlan = "none" | "monthly" | "yearly" | "lifetime";
@@ -333,6 +348,13 @@ function readBearerToken(request: Request): string | null {
   return match?.[1]?.trim() || null;
 }
 
+export function sessionCookieIfBearerDiffers(request: Request): string | null {
+  const bearer = readBearerToken(request);
+  if (!bearer) return null;
+  if (readCookie(request, COOKIE_NAME) === bearer) return null;
+  return sessionCookie(bearer, request, SESSION_DAYS * 24 * 60 * 60);
+}
+
 function readSessionToken(request: Request): string | null {
   return readBearerToken(request) || readCookie(request, COOKIE_NAME);
 }
@@ -380,6 +402,23 @@ export async function deleteAccountForUser(
     db.prepare(`DELETE FROM cloud_backup_manifests WHERE user_id = ?`).bind(userId),
     db.prepare(`DELETE FROM users WHERE id = ?`).bind(userId),
   ]);
+  try {
+    // Buyers keep access to past purchases; the ledger is kept for accounting.
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE market_listings SET status = 'removed'
+           WHERE seller_id = ? AND status IN ('pending_review', 'live')`,
+        )
+        .bind(userId),
+      db
+        .prepare(`DELETE FROM market_blocks WHERE user_id = ? OR blocked_user_id = ?`)
+        .bind(userId, userId),
+      db.prepare(`DELETE FROM gold_laurel_grants WHERE user_id = ?`).bind(userId),
+    ]);
+  } catch {
+    // Marketplace tables may not exist yet.
+  }
   if (backups) {
     let cursor: string | undefined;
     do {

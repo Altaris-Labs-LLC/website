@@ -1,5 +1,24 @@
+import Link from "next/link";
+
 import AscentArt from "@/components/AscentArt";
 import { ascentArt } from "@/lib/ascent-site";
+
+const games: {
+  name: string;
+  icon: string;
+  href: string | null;
+}[] = [
+  {
+    name: "Chess Ascent",
+    icon: ascentArt.chessIcon,
+    href: "/ascentgames/play/chess",
+  },
+  {
+    name: "Checkers Ascent",
+    icon: ascentArt.checkersIcon,
+    href: null,
+  },
+];
 
 export const metadata = {
   title: "Ascent Games",
@@ -36,39 +55,32 @@ export default function Page() {
             Each title has its own table, its own tools, and the same invitation:
             play well, understand more, and keep rising.
           </p>
-          <div className="ascent-game-grid">
-            <article className="ascent-game-card ascent-game-chess">
-              <AscentArt
-                src={ascentArt.chess}
-                label="Chess Ascent cover"
-                hint="Chess table art in cream and forest green."
-                className="ascent-game-art"
-              />
-              <div className="ascent-game-copy">
-                <p className="ascent-kicker">Chess Ascent</p>
-                <h3>Find the next good move.</h3>
-                <p>
-                  Openings, practice, puzzles, and a patient computer that
-                  grows with you. The same warm table you know from the app.
-                </p>
-              </div>
-            </article>
-            <article className="ascent-game-card ascent-game-checkers">
-              <AscentArt
-                src={ascentArt.checkers}
-                label="Checkers Ascent cover"
-                hint="Checkers table art in oak, rust, and red."
-                className="ascent-game-art"
-              />
-              <div className="ascent-game-copy">
-                <p className="ascent-kicker">Checkers Ascent</p>
-                <h3>Simple rules. Real depth.</h3>
-                <p>
-                  A classic board with the same study tools: repertoires,
-                  analysis, and a path that rewards curiosity, not just speed.
-                </p>
-              </div>
-            </article>
+          <div className="ascent-app-row">
+            {games.map((game) => {
+              const body = (
+                <>
+                  <img src={game.icon} alt="" />
+                  <span>{game.name}</span>
+                </>
+              );
+              if (game.href) {
+                return (
+                  <Link
+                    key={game.name}
+                    href={game.href}
+                    className="ascent-app"
+                    aria-label={game.name}
+                  >
+                    {body}
+                  </Link>
+                );
+              }
+              return (
+                <div key={game.name} className="ascent-app ascent-app-idle">
+                  {body}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

@@ -47,6 +47,51 @@ export default function Page() {
             </a>
             .
           </p>
+          <h3 id="gold">Gold</h3>
+          <p className="large-copy">
+            Gold is a virtual currency tied to your Ascent account and usable
+            in every Ascent Games app and on this site. Gold is sold in packs
+            at one cent per Gold; each pack includes bonus Laurels, an in-game
+            currency that does not count toward leaderboards. Gold does not
+            expire, has no cash value, and purchased Gold cannot be exchanged
+            for money. Purchases made in the App Store or Google Play are
+            handled under those stores&apos; refund policies. If a Gold
+            purchase is refunded or charged back, the Gold is removed from
+            your account; Gold already spent becomes a balance owed that
+            blocks spending and cash-outs until repaid.
+          </p>
+          <h3 id="marketplace">Marketplace seller terms</h3>
+          <p className="large-copy">
+            Ascent Premium members may list repertoires and lessons they
+            created, or have the right to sell, on the Ascent Marketplace for
+            a Gold price they choose, including free. Listings are reviewed
+            before they appear and may be rejected or removed at any time,
+            including in response to a copyright complaint. By listing, you
+            grant Altaris Labs a license to host, display, and deliver the
+            content to buyers, and each buyer a personal license to use it in
+            Ascent Games. Buyers keep access to items they bought if a listing
+            is later removed by its seller. Listings are hidden while the
+            seller does not have Premium.
+          </p>
+          <p className="large-copy">
+            Sellers receive 50% of the Gold from each sale. Earned Gold can be
+            spent like any Gold, or cashed out at one cent per Gold once it is
+            at least 14 days old, with a minimum cash-out of 1,000 Gold.
+            Cash-outs are reviewed and paid through Stripe; you must complete
+            Stripe&apos;s identity, bank, and tax onboarding, and you are
+            responsible for any taxes on your earnings. We may withhold or
+            reverse earnings tied to refunds, chargebacks, fraud, self-dealing,
+            or content that violates these terms. You may not buy your own
+            listings or use other accounts to do so.
+          </p>
+          <p className="large-copy">
+            To report a listing that copies your work, use Report in the app
+            or email{" "}
+            <a className="text-link" href="mailto:brentunderwood@altarislabs.dev">
+              brentunderwood@altarislabs.dev
+            </a>{" "}
+            with the listing title and proof of ownership.
+          </p>
         </div>
       </div>
     </section>

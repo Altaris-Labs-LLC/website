@@ -3,6 +3,7 @@ import {
   json,
   publicUser,
   requireSecret,
+  sessionCookieIfBearerDiffers,
   userFromRequest,
   type Env,
 } from "./_lib";
@@ -17,5 +18,8 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>) 
       "Set-Cookie": clearSessionCookie(context.request),
     });
   }
-  return json(context.request, { user: publicUser(user) });
+  const headers: Record<string, string> = {};
+  const cookie = sessionCookieIfBearerDiffers(context.request);
+  if (cookie) headers["Set-Cookie"] = cookie;
+  return json(context.request, { user: publicUser(user) }, 200, headers);
 }

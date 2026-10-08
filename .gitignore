@@ -8,4 +8,9 @@ out
 
 .env
 .env.local
+.env.local.disabled
+tsconfig.tsbuildinfo
+
+# Flutter web build copied in from ascent_games; deployed from disk, not git.
+public/play/
 

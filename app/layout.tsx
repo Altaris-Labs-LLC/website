@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./ascent.css";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
+import Script from "next/script";
 import SiteChrome from "@/components/SiteChrome";
 
 const fraunces = Fraunces({
@@ -29,6 +30,12 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${sourceSans.variable}`}
     >
+      <head>
+        <Script
+          src="https://js.stripe.com/dahlia/stripe.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body>
         <SiteChrome>{children}</SiteChrome>
       </body>

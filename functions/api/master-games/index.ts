@@ -27,6 +27,8 @@ function publicMoves(moves: MasterMove[]) {
   }));
 }
 
+const PUBLIC_MAX_FENS = 8;
+
 async function requirePremium(
   env: Env,
   request: Request,
@@ -83,9 +85,6 @@ type Body = {
  * Each FEN is an independent shard lookup — still not the full table.
  */
 export async function onRequestPost(context: EventContext<Env, string, unknown>) {
-  const denied = await requirePremium(context.env, context.request);
-  if (denied) return denied;
-
   const body = await readJson<Body>(context.request);
   const gameId = normalizeGameId(body?.gameId);
   if (!GAMES.has(gameId)) {
@@ -103,6 +102,15 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     seen.add(fen);
     fens.push(fen);
     if (fens.length >= MAX_FENS_PER_REQUEST) break;
+  }
+
+  // The web app cannot ship the 100MB table. A single board position is a
+  // handful of FEN variants. Scanning many positions stays Premium.
+  if (fens.length > PUBLIC_MAX_FENS) {
+    const denied = await requirePremium(context.env, context.request);
+    if (denied) return denied;
+  } else if (!context.env.ASCENT_FILES) {
+    return json(context.request, { error: "Master games host is unavailable." }, 503);
   }
 
   const found = await lookupMovesAtFens(context.env, gameId, fens);

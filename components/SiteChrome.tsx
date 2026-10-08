@@ -19,11 +19,12 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   }, [ascent]);
 
   if (ascent) {
+    const play = pathname.startsWith("/ascentgames/play/");
     return (
-      <div className="ascent-shell">
+      <div className={play ? "ascent-shell ascent-shell-play" : "ascent-shell"}>
         <AscentHeader />
         <main>{children}</main>
-        <AscentFooter />
+        {play ? null : <AscentFooter />}
       </div>
     );
   }

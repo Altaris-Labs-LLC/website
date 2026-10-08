@@ -25,6 +25,17 @@ export default function Page() {
             or use it for advertising. You can sign out at any time. Account
             questions: {site.email}.
           </p>
+          <p className="large-copy">
+            Gold and the Ascent Marketplace: we keep a record of your Gold
+            balance, Gold purchases (store transaction or order ids, never card
+            numbers), Marketplace listings you upload, items you buy, reports
+            you send, and sellers you block. Listing content you upload is
+            stored so buyers can download it; your practice progress is never
+            uploaded with it. Your display name is shown on your listings.
+            Card payments and seller payouts are handled by Stripe, which
+            collects payment, identity, bank, and tax details under its own
+            privacy policy; we receive only the status of your payout account.
+          </p>
         </div>
       </div>
     </section>

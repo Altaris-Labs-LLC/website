@@ -13,7 +13,7 @@ export const GAMES = new Set(["chess", "checkers"]);
 export const SEEK_TTL_MS = 20_000;
 export const DISCONNECT_FORFEIT_MS = 45_000;
 export const ELO_MATCH_WINDOW = 200;
-export const FREE_PVP_PER_DAY = 1;
+export const FREE_PVP_PER_DAY = 3;
 
 export type PlayerIdentity = {
   playerKey: string;

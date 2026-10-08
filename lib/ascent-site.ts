@@ -4,6 +4,8 @@ export const ascentArt = {
   texture: "/brand/ascent/texture.jpg",
   chess: "/brand/ascent/games/chess.jpg",
   checkers: "/brand/ascent/games/checkers.jpg",
+  chessIcon: "/brand/ascent/icons/chess.png",
+  checkersIcon: "/brand/ascent/icons/checkers.png",
 } as const;
 
 export function isAscentPath(pathname: string) {

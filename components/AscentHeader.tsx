@@ -20,6 +20,7 @@ export default function AscentHeader() {
         <nav className="ascent-nav-links" aria-label="Ascent">
           <Link href="/ascentgames#library">Games</Link>
           <Link href="/ascentgames/subscription">Subscription</Link>
+          <Link href="/ascentgames/gold">Gold</Link>
           <Link href="/ascentgames/leaderboard">Leaderboard</Link>
           <Link href="/ascentgames/support">Support</Link>
           <AscentAccountLink />
