@@ -109,6 +109,41 @@ export async function stripeFetch(
   return data || {};
 }
 
+const STRIPE_V2_API_VERSION = "2026-09-30.endive";
+
+/** Stripe v2 endpoints (Connect accounts / account links) take JSON bodies. */
+export async function stripeV2Fetch(
+  env: Env,
+  path: string,
+  init?: {
+    method?: string;
+    body?: unknown;
+    idempotencyKey?: string;
+  },
+): Promise<StripeObject> {
+  const key = env.STRIPE_SECRET_KEY;
+  if (!key) throw new StripeError("Payouts are not configured yet.");
+  const method = init?.method || "GET";
+  const response = await fetch(`https://api.stripe.com/v2/${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Stripe-Version": STRIPE_V2_API_VERSION,
+      ...(init?.body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(init?.idempotencyKey ? { "Idempotency-Key": init.idempotencyKey } : {}),
+    },
+    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+  });
+  const data = (await response.json().catch(() => null)) as StripeObject | null;
+  if (!response.ok) {
+    const error = data?.error as { message?: unknown } | undefined;
+    throw new StripeError(
+      typeof error?.message === "string" ? error.message : "Stripe request failed.",
+    );
+  }
+  return data || {};
+}
+
 export async function createCheckoutSession(
   env: Env,
   input: {

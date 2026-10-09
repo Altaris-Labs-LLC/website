@@ -1,6 +1,6 @@
 import { json, type Env } from "../auth/_lib";
 import { sendFeedbackEmail } from "../feedback/_lib";
-import { stripeFetch, stripeConfigured } from "../subscription/_stripe";
+import { stripeConfigured, stripeV2Fetch } from "../subscription/_stripe";
 
 export type GoldPack = {
   id: string;
@@ -160,13 +160,23 @@ async function refreshPayoutsReady(env: Env, wallet: WalletRow): Promise<boolean
   if (wallet.payouts_ready) return true;
   if (!wallet.payout_account_id || !stripeConfigured(env)) return false;
   try {
-    const account = await stripeFetch(
+    const account = (await stripeV2Fetch(
       env,
-      `accounts/${encodeURIComponent(wallet.payout_account_id)}`,
-    );
-    const capabilities = account.capabilities as Record<string, unknown> | undefined;
-    const ready =
-      account.payouts_enabled === true && capabilities?.transfers === "active";
+      `core/accounts/${encodeURIComponent(wallet.payout_account_id)}` +
+        `?include=configuration.recipient&include=requirements`,
+    )) as {
+      configuration?: {
+        recipient?: {
+          capabilities?: { stripe_balance?: { stripe_transfers?: { status?: string } } };
+        };
+      };
+      requirements?: { summary?: { minimum_deadline?: { status?: string } } };
+    };
+    const transfersActive =
+      account.configuration?.recipient?.capabilities?.stripe_balance?.stripe_transfers
+        ?.status === "active";
+    const due = account.requirements?.summary?.minimum_deadline?.status;
+    const ready = transfersActive && due !== "currently_due" && due !== "past_due";
     if (ready) {
       await env.ASCENT_DB.prepare(
         `UPDATE gold_wallets SET payouts_ready = 1, updated_at = ? WHERE user_id = ?`,

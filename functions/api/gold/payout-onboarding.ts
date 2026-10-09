@@ -4,13 +4,14 @@ import {
   stripeConfigured,
   stripeFetch,
   StripeError,
+  stripeV2Fetch,
 } from "../subscription/_stripe";
 import { ensureWalletStmt, errorJson, nowIso, readWallet, walletJson } from "./_lib";
 
 /**
- * Stripe Connect (Express) onboarding link for sellers. Stripe collects bank
- * and tax details; once payouts are enabled this returns the Stripe Express
- * dashboard instead.
+ * Stripe Connect onboarding link for sellers (v2 recipient account with the
+ * Express dashboard). Stripe collects bank and tax details; once transfers are
+ * active this returns the Stripe Express dashboard instead.
  */
 export async function onRequestPost(context: EventContext<Env, string, unknown>) {
   const { request, env } = context;
@@ -27,17 +28,30 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     const wallet = await readWallet(db, user.id);
     let accountId = wallet.payout_account_id;
     if (!accountId) {
-      const account = await stripeFetch(env, "accounts", {
+      // Recipient-only account: the platform sets prices and collects fees,
+      // and sellers receive cash-outs as transfers to their Stripe balance.
+      const account = await stripeV2Fetch(env, "core/accounts", {
         method: "POST",
-        idempotencyKey: `payout-account-${user.id}`,
-        params: {
-          type: "express",
-          email: user.email,
-          business_type: "individual",
-          "capabilities[transfers][requested]": "true",
-          "business_profile[product_description]":
-            "Sells chess and checkers training content on the Ascent Games Marketplace.",
-          "metadata[userId]": user.id,
+        idempotencyKey: `payout-account-v2-${user.id}`,
+        body: {
+          display_name: (user.display_name || user.email).slice(0, 100),
+          contact_email: user.email,
+          identity: { country: "us" },
+          dashboard: "express",
+          defaults: {
+            responsibilities: {
+              fees_collector: "application",
+              losses_collector: "application",
+            },
+          },
+          configuration: {
+            recipient: {
+              capabilities: {
+                stripe_balance: { stripe_transfers: { requested: true } },
+              },
+            },
+          },
+          metadata: { userId: user.id },
         },
       });
       accountId = typeof account.id === "string" ? account.id : null;
@@ -62,13 +76,18 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
       );
       return json(request, { url: link.url, ready: true });
     }
-    const link = await stripeFetch(env, "account_links", {
+    const link = await stripeV2Fetch(env, "core/account_links", {
       method: "POST",
-      params: {
+      body: {
         account: accountId,
-        type: "account_onboarding",
-        refresh_url: `${origin}/ascentgames/gold?payouts=refresh`,
-        return_url: `${origin}/ascentgames/gold?payouts=done`,
+        use_case: {
+          type: "account_onboarding",
+          account_onboarding: {
+            configurations: ["recipient"],
+            refresh_url: `${origin}/ascentgames/gold?payouts=refresh`,
+            return_url: `${origin}/ascentgames/gold?payouts=done`,
+          },
+        },
       },
     });
     return json(request, { url: link.url, ready: false });
