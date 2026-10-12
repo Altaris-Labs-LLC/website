@@ -1,8 +1,10 @@
 import {
+  claimAnonymousUser,
   createSession,
   findUserByEmail,
   hashPassword,
   insertUser,
+  isAnonymousUser,
   isValidDisplayName,
   isValidEmail,
   isValidPassword,
@@ -11,6 +13,7 @@ import {
   readJson,
   requireSecret,
   sessionJson,
+  userFromRequest,
   type Env,
 } from "./_lib";
 
@@ -51,11 +54,20 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
   }
 
   try {
-    const user = await insertUser(context.env.ASCENT_DB, {
-      email,
-      displayName,
-      passwordHash: await hashPassword(password),
-    });
+    const passwordHash = await hashPassword(password);
+    const current = await userFromRequest(context.env, context.request);
+    const user =
+      current && isAnonymousUser(current)
+        ? await claimAnonymousUser(context.env.ASCENT_DB, current, {
+            email,
+            displayName,
+            passwordHash,
+          })
+        : await insertUser(context.env.ASCENT_DB, {
+            email,
+            displayName,
+            passwordHash,
+          });
     const session = await createSession(context.env, context.request, user.id);
     return sessionJson(context.request, user, session, 201);
   } catch {

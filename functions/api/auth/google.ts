@@ -1,12 +1,15 @@
 import {
+  claimAnonymousUser,
   createSession,
   findUserByEmail,
   findUserByGoogleSub,
   insertUser,
+  isAnonymousUser,
   json,
   readJson,
   requireSecret,
   sessionJson,
+  userFromRequest,
   verifyGoogleIdToken,
   type Env,
 } from "./_lib";
@@ -64,12 +67,21 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
         avatar_url: profile.avatarUrl || user.avatar_url,
       };
     } else {
-      user = await insertUser(context.env.ASCENT_DB, {
-        email: profile.email,
-        displayName: profile.displayName,
-        googleSub: profile.sub,
-        avatarUrl: profile.avatarUrl,
-      });
+      const current = await userFromRequest(context.env, context.request);
+      user =
+        current && isAnonymousUser(current)
+          ? await claimAnonymousUser(context.env.ASCENT_DB, current, {
+              email: profile.email,
+              displayName: profile.displayName,
+              googleSub: profile.sub,
+              avatarUrl: profile.avatarUrl,
+            })
+          : await insertUser(context.env.ASCENT_DB, {
+              email: profile.email,
+              displayName: profile.displayName,
+              googleSub: profile.sub,
+              avatarUrl: profile.avatarUrl,
+            });
     }
   }
 

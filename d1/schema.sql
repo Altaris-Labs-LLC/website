@@ -166,6 +166,11 @@ CREATE TABLE IF NOT EXISTS puzzle_difficulty_params (
   PRIMARY KEY (game_id, puzzle_type)
 );
 
+CREATE TABLE IF NOT EXISTS anon_ids (
+  n INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS puzzle_table_meta (
   game_id TEXT PRIMARY KEY,
   cumulative_adjustment REAL NOT NULL DEFAULT 0,

@@ -1,13 +1,17 @@
 import {
+  claimAnonymousUser,
   createSession,
   findUserByAppleSub,
   findUserByEmail,
   insertUser,
+  isAnonymousUser,
   isValidDisplayName,
   json,
   readJson,
+  rememberAppleAuthorizationCode,
   requireSecret,
   sessionJson,
+  userFromRequest,
   verifyAppleIdToken,
   type Env,
 } from "./_lib";
@@ -16,6 +20,7 @@ type AppleBody = {
   identityToken?: string;
   nonce?: string;
   displayName?: string;
+  authorizationCode?: string;
 };
 
 export async function onRequestPost(context: EventContext<Env, string, unknown>) {
@@ -65,11 +70,33 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     const displayName = isValidDisplayName(requested)
       ? requested
       : profile.email.split("@")[0].slice(0, 80);
-    user = await insertUser(context.env.ASCENT_DB, {
-      email: profile.email,
-      displayName,
-      appleSub: profile.sub,
-    });
+    const current = await userFromRequest(context.env, context.request);
+    user =
+      current && isAnonymousUser(current)
+        ? await claimAnonymousUser(context.env.ASCENT_DB, current, {
+            email: profile.email,
+            displayName,
+            appleSub: profile.sub,
+          })
+        : await insertUser(context.env.ASCENT_DB, {
+            email: profile.email,
+            displayName,
+            appleSub: profile.sub,
+          });
+  }
+
+  const authorizationCode = (body?.authorizationCode || "").trim();
+  if (authorizationCode && profile.clientId) {
+    try {
+      await rememberAppleAuthorizationCode(
+        context.env,
+        user.id,
+        profile.clientId,
+        authorizationCode,
+      );
+    } catch {
+      // Sign-in still succeeds. The next Apple sign-in can store a token.
+    }
   }
 
   const session = await createSession(context.env, context.request, user.id);

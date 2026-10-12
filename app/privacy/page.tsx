@@ -19,22 +19,31 @@ export default function Page() {
             sold or used for marketing lists.
           </p>
           <p className="large-copy">
-            Ascent Games accounts store your email, display name, and a
-            password hash (or Google account identifier if you sign in with
-            Google) so you can return later. We do not sell this information
-            or use it for advertising. You can sign out at any time. Account
+            Chess Ascent and Checkers Ascent store progress on the device.
+            Each app also creates an account with a public display name such
+            as Anonymous_12 so the leaderboard can show you without an email
+            address. If you connect an email, Google, or Sign in with Apple,
+            we store that email and the sign-in identifier, and the display
+            name is replaced. Laurel scores are sent to the server with that
+            name. Premium cloud backup, when you use it, stores a copy of the
+            progress on the device. You can delete the account from Profile
+            in the app. We do not sell this information.
+          </p>
+          <p className="large-copy">
+            The free apps show ads through Google AdMob. Premium removes
+            those ads. On iOS the app asks before using a device identifier
+            to make ads more relevant. Purchases are handled by Apple or
+            Google. We receive the purchase result, not your card number.
+            The privacy policy for each app is at
+            altarislabs.dev/ascent_games/legal/privacy/chess and
+            altarislabs.dev/ascent_games/legal/privacy/checkers. Account
             questions: {site.email}.
           </p>
           <p className="large-copy">
-            Gold and the Ascent Marketplace: we keep a record of your Gold
-            balance, Gold purchases (store transaction or order ids, never card
-            numbers), Marketplace listings you upload, items you buy, reports
-            you send, and sellers you block. Listing content you upload is
-            stored so buyers can download it; your practice progress is never
-            uploaded with it. Your display name is shown on your listings.
-            Card payments and seller payouts are handled by Stripe, which
-            collects payment, identity, bank, and tax details under its own
-            privacy policy; we receive only the status of your payout account.
+            The Marketplace on this website, when you use it, stores listings
+            you upload, items you buy, and the display name on those listings.
+            Card payments and seller payouts for that website shop are handled
+            by Stripe under its own privacy policy.
           </p>
         </div>
       </div>

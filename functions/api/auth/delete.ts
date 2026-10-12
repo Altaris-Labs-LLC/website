@@ -4,6 +4,7 @@ import {
   json,
   readJson,
   requireSecret,
+  revokeStoredAppleSignIn,
   userFromRequest,
   type Env,
 } from "./_lib";
@@ -31,6 +32,7 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     );
   }
 
+  await revokeStoredAppleSignIn(context.env, user.id);
   await deleteAccountForUser(
     context.env.ASCENT_DB,
     user.id,

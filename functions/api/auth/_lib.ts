@@ -17,6 +17,10 @@ export interface Env {
   APPLE_IAP_ISSUER_ID?: string;
   /** Contents of the AuthKey_XXXX.p8 file. */
   APPLE_IAP_PRIVATE_KEY?: string;
+  /** Sign in with Apple key. Team ID is the 10-character Apple Developer team. */
+  APPLE_TEAM_ID?: string;
+  APPLE_SIGNIN_KEY_ID?: string;
+  APPLE_SIGNIN_PRIVATE_KEY?: string;
   /** Google Play service-account JSON for Gold receipts. */
   GOOGLE_PLAY_SERVICE_ACCOUNT?: string;
   /** Shared token in the Play real-time developer notification push URL. */
@@ -36,6 +40,7 @@ export type AuthUser = {
   id: string;
   email: string;
   displayName: string;
+  anonymous?: boolean;
   avatarUrl: string | null;
   createdAt: string;
   subscription: AuthSubscription;
@@ -138,6 +143,93 @@ export function isValidDisplayName(value: string): boolean {
   return name.length >= 1 && name.length <= 80;
 }
 
+const ANONYMOUS_EMAIL = /^anon\.(\d+)@users\.ascent\.invalid$/i;
+
+export function isAnonymousUser(user: { email: string }): boolean {
+  return ANONYMOUS_EMAIL.test(user.email);
+}
+
+export function anonymousEmail(n: number): string {
+  return `anon.${n}@users.ascent.invalid`;
+}
+
+export function anonymousDisplayName(n: number): string {
+  return `Anonymous_${n}`;
+}
+
+/** Next id for Anonymous_[id]. The table is created on first use. */
+export async function nextAnonymousNumber(db: D1Database): Promise<number> {
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS anon_ids (
+         n INTEGER PRIMARY KEY AUTOINCREMENT,
+         created_at TEXT NOT NULL
+       )`,
+    )
+    .run();
+  const inserted = await db
+    .prepare(`INSERT INTO anon_ids (created_at) VALUES (?)`)
+    .bind(new Date().toISOString())
+    .run();
+  let n = Number(inserted.meta.last_row_id);
+  if (!Number.isInteger(n) || n < 1) {
+    const row = await db
+      .prepare(`SELECT MAX(n) AS n FROM anon_ids`)
+      .first<{ n: number | null }>();
+    n = Number(row?.n);
+  }
+  if (!Number.isInteger(n) || n < 1) throw new Error("anonymous id");
+  return n;
+}
+
+/** Replaces Anonymous_[id] with a real login on the same account. */
+export async function claimAnonymousUser(
+  db: D1Database,
+  user: UserRow,
+  input: {
+    email: string;
+    displayName: string;
+    passwordHash?: string | null;
+    googleSub?: string | null;
+    appleSub?: string | null;
+    avatarUrl?: string | null;
+  },
+): Promise<UserRow> {
+  const now = new Date().toISOString();
+  await db
+    .prepare(
+      `UPDATE users
+       SET email = ?, display_name = ?,
+           password_hash = COALESCE(?, password_hash),
+           google_sub = COALESCE(?, google_sub),
+           apple_sub = COALESCE(?, apple_sub),
+           avatar_url = COALESCE(?, avatar_url),
+           last_seen_at = ?
+       WHERE id = ?`,
+    )
+    .bind(
+      input.email,
+      input.displayName,
+      input.passwordHash ?? null,
+      input.googleSub ?? null,
+      input.appleSub ?? null,
+      input.avatarUrl ?? null,
+      now,
+      user.id,
+    )
+    .run();
+  return ensureComplimentary(db, {
+    ...user,
+    email: input.email,
+    display_name: input.displayName,
+    password_hash: input.passwordHash ?? user.password_hash,
+    google_sub: input.googleSub ?? user.google_sub,
+    apple_sub: input.appleSub ?? user.apple_sub,
+    avatar_url: input.avatarUrl ?? user.avatar_url,
+    last_seen_at: now,
+  });
+}
+
 export function resolveSubscription(row: UserRow): AuthSubscription {
   const source = row.premium_source || null;
   const plan = (row.premium_plan || "none") as AuthPlan;
@@ -165,6 +257,7 @@ export function publicUser(row: UserRow): AuthUser {
     id: row.id,
     email: row.email,
     displayName: row.display_name,
+    anonymous: isAnonymousUser(row),
     avatarUrl: row.avatar_url,
     createdAt: row.created_at,
     subscription: resolveSubscription(row),
@@ -597,7 +690,142 @@ export async function verifyAppleIdToken(token: string, rawNonce: string) {
 
   const email = payload.email ? normalizeEmail(payload.email) : null;
   if (email && !isValidEmail(email)) throw new Error("invalid_claims");
-  return { email, sub: payload.sub };
+  const clientId =
+    audience.find((value) => value && APPLE_AUDIENCES.has(value)) || "";
+  return { email, sub: payload.sub, clientId };
+}
+
+function pemToDer(pem: string): Uint8Array {
+  const body = pem
+    .replace(/-----BEGIN [^-]+-----/g, "")
+    .replace(/-----END [^-]+-----/g, "")
+    .replace(/\s+/g, "");
+  const binary = atob(body);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function base64UrlBytes(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function appleSignInClientSecret(env: Env, clientId: string): Promise<string | null> {
+  if (!env.APPLE_TEAM_ID || !env.APPLE_SIGNIN_KEY_ID || !env.APPLE_SIGNIN_PRIVATE_KEY) {
+    return null;
+  }
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToDer(env.APPLE_SIGNIN_PRIVATE_KEY) as BufferSource,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const iat = Math.floor(Date.now() / 1000);
+  const header = base64UrlBytes(
+    new TextEncoder().encode(
+      JSON.stringify({ alg: "ES256", kid: env.APPLE_SIGNIN_KEY_ID, typ: "JWT" }),
+    ),
+  );
+  const payload = base64UrlBytes(
+    new TextEncoder().encode(
+      JSON.stringify({
+        iss: env.APPLE_TEAM_ID,
+        iat,
+        exp: iat + 15 * 60,
+        aud: "https://appleid.apple.com",
+        sub: clientId,
+      }),
+    ),
+  );
+  const signingInput = `${header}.${payload}`;
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    new TextEncoder().encode(signingInput),
+  );
+  return `${signingInput}.${base64UrlBytes(new Uint8Array(signature))}`;
+}
+
+async function ensureAppleTokenTable(db: D1Database) {
+  await db
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS apple_sign_in_tokens (
+         user_id TEXT PRIMARY KEY,
+         client_id TEXT NOT NULL,
+         refresh_token TEXT NOT NULL,
+         updated_at TEXT NOT NULL
+       )`,
+    )
+    .run();
+}
+
+/** Exchanges the one-time Apple code so account deletion can revoke it. */
+export async function rememberAppleAuthorizationCode(
+  env: Env,
+  userId: string,
+  clientId: string,
+  authorizationCode: string,
+) {
+  const secret = await appleSignInClientSecret(env, clientId);
+  if (!secret || !authorizationCode) return;
+  const response = await fetch("https://appleid.apple.com/auth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: secret,
+      code: authorizationCode,
+      grant_type: "authorization_code",
+    }),
+  });
+  if (!response.ok) return;
+  const data = (await response.json()) as { refresh_token?: string };
+  if (!data.refresh_token) return;
+  await ensureAppleTokenTable(env.ASCENT_DB);
+  await env.ASCENT_DB.prepare(
+    `INSERT INTO apple_sign_in_tokens (user_id, client_id, refresh_token, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
+       client_id = excluded.client_id,
+       refresh_token = excluded.refresh_token,
+       updated_at = excluded.updated_at`,
+  )
+    .bind(userId, clientId, data.refresh_token, new Date().toISOString())
+    .run();
+}
+
+/** Revokes a stored Sign in with Apple refresh token, if this account has one. */
+export async function revokeStoredAppleSignIn(env: Env, userId: string) {
+  try {
+    await ensureAppleTokenTable(env.ASCENT_DB);
+    const row = await env.ASCENT_DB.prepare(
+      `SELECT client_id, refresh_token FROM apple_sign_in_tokens WHERE user_id = ?`,
+    )
+      .bind(userId)
+      .first<{ client_id: string; refresh_token: string }>();
+    if (!row) return;
+    const secret = await appleSignInClientSecret(env, row.client_id);
+    if (secret) {
+      await fetch("https://appleid.apple.com/auth/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: row.client_id,
+          client_secret: secret,
+          token: row.refresh_token,
+          token_type_hint: "refresh_token",
+        }),
+      });
+    }
+    await env.ASCENT_DB.prepare(`DELETE FROM apple_sign_in_tokens WHERE user_id = ?`)
+      .bind(userId)
+      .run();
+  } catch {
+    // Account deletion still proceeds.
+  }
 }
 
 export async function verifyGoogleIdToken(token: string, clientId: string) {
