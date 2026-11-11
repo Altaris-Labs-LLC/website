@@ -36,7 +36,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const updated = "October 12, 2026";
+  const updated = "November 10, 2026";
   const training = game.slug === "chess" || game.slug === "checkers";
 
   return (
@@ -76,16 +76,38 @@ export default async function Page({ params }: Props) {
               </p>
               <p className="large-copy">
                 <strong>Purchases.</strong> Premium is sold as an auto-renewing
-                subscription through Apple or Google. We receive a record that the
-                purchase succeeded. We do not receive your card number.
+                subscription through Apple or Google. Gold packs are sold as
+                consumable in-app purchases through those stores. We receive a
+                record that the purchase succeeded. We do not receive your card
+                number.
+              </p>
+              <p className="large-copy">
+                <strong>Gold and Marketplace.</strong> Gold is virtual currency
+                tied to your Ascent account. Purchased Gold has no cash value and
+                cannot be exchanged for money. Premium members may list
+                user-created repertoires and lessons on the Marketplace for a Gold
+                price. We store listing titles, descriptions, images you upload,
+                prices, and purchase records with your account. Sellers receive a
+                share of Gold from each sale. Earned Gold from sales may be spent
+                in the apps or cashed out through Stripe after identity, bank, and
+                tax onboarding; we process payout requests and related information
+                needed to pay you. You can report a listing from the App.
+              </p>
+              <p className="large-copy">
+                <strong>Photos and files.</strong> If you choose a backup zip from
+                your photo library or files, the App reads only the file you select
+                so you can restore repertoires, lessons, and progress. If you add an
+                image to a Marketplace listing, that image is uploaded with the
+                listing.
               </p>
               <p className="large-copy">
                 <strong>Advertising.</strong> The free App shows ads from Google
                 AdMob, including a banner and an occasional full-screen ad. On iOS
                 we ask permission before using the device identifier for more
-                relevant ads. In the European Economic Area, the United Kingdom,
-                and Switzerland, Google’s consent form is shown before ads are
-                requested. Premium removes ads. We do not sell your personal
+                relevant ads. If you decline, ads may still appear in a less
+                personalized form. In the European Economic Area, the United
+                Kingdom, and Switzerland, Google’s consent form is shown before ads
+                are requested. Premium removes ads. We do not sell your personal
                 information.
               </p>
               <p className="large-copy">
