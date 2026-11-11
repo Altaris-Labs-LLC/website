@@ -20,7 +20,8 @@ const SELECT_COLUMNS = `game_id, puzzle_type, fen, move_string, next_fen, last_f
 const ESTABLISHED_CORPUS_MIN = 1000;
 const ESTABLISHED_MIN_VIEWS = 100;
 /** Chance to allow a low-view puzzle when the corpus is large enough. */
-const LOW_VIEW_SERVE_CHANCE = 0.01;
+const LOW_VIEW_SERVE_CHANCE = 0.01; // 99% established when corpus is large
+
 
 /** Pipe-separated FENs the client already dealt or reported. */
 function excludeFenList(raw: string | null): string[] {
