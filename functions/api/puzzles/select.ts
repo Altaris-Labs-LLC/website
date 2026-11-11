@@ -1,5 +1,4 @@
 import { json, requireSecret, type Env } from "../auth/_lib";
-import { noteRequestUsage } from "../usage/_lib";
 import {
   GAMES,
   PUZZLE_TYPES,
@@ -258,7 +257,6 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>) 
       limit,
     );
   }
-  noteRequestUsage(context, { puzzle_selects: 1 });
   const puzzles = rows.map(publicPuzzle);
   if (puzzles.length === 0) {
     return json(context.request, { puzzle: null, puzzles: [] }, 404);
